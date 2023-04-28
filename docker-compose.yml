@@ -1,0 +1,56 @@
+version: "3.7"
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: reponame
+    container_name: reponame-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      reponame:
+        ipv4_address: 192.168.0.2
+
+  db:
+    image: mysql:8.0
+    container_name: reponame-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      reponame:
+        ipv4_address: 192.168.0.3
+
+  nginx:
+    image: nginx:alpine
+    container_name: reponame-nginx
+    restart: unless-stopped
+    ports:
+      - 8005:80
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d/
+    networks:
+      reponame:
+        ipv4_address: 192.168.0.4
+
+networks:
+  reponame:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+
+volumes:
+  db_data:
+
